@@ -35,8 +35,6 @@ class Network:
             fs: list[np.ndarray] = []
             # Values after activation function (including inputs to the first layer), shapes (I), (L_1), ..., (O).
             gs: list[np.ndarray] = [a]
-        else: 
-            res = a
 
         i = 0
         for b, w in zip(self.biases, self.weights):
