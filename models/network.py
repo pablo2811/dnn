@@ -31,24 +31,26 @@ class Network:
         Args:
         - a: input vector, shape (B, I), dtype float64.
         """
-        if memoize:
-            fs: list[np.ndarray] = []
-            # Values after activation function (including inputs to the first layer), shapes (I), (L_1), ..., (O).
-            gs: list[np.ndarray] = [a]
+        fs: list[np.ndarray] = []
+        # Values after activation function (including inputs to the first layer), shapes (I), (L_1), ..., (O).
+        gs: list[np.ndarray] = [a]
 
         i = 0
         for b, w in zip(self.biases, self.weights):
-            fs_next = (gs[0] if memoize else gs[-1]) @ w.T  + b
+            fs_next = (gs[-1] if memoize else gs[0]) @ w.T  + b
             if memoize:
                 fs.append(fs_next)
 
             if i == self.num_layers - 2 and self.normalize == "softmax":
-              gs[0] = softmax(fs_next)
+              gs_next = softmax(fs_next)
             else:
-              gs[0] = sigmoid(fs_next)
+              gs_next = sigmoid(fs_next)
 
             if memoize:
-                gs.append(gs[0])
+                gs.append(gs_next)
+            else:
+                gs[0] = gs_next
+                
             i += 1
 
         if memoize:
@@ -73,12 +75,13 @@ class Network:
         # for x, y in zip(x_mini_batch, y_mini_batch):
         nabla_b, nabla_w = self.backprop(x_mini_batch, y_mini_batch)
 
+
         # Gradient descent step.
         self.weights = [w - nw * (eta / len(x_mini_batch))
                         for w, nw in zip(self.weights, nabla_w)]
         self.biases = [b - nb * (eta / len(x_mini_batch))
                        for b, nb in zip(self.biases, nabla_b)]
-
+        
 
     def backprop(self, x: np.ndarray, y: np.ndarray) -> tuple[list[np.ndarray], list[np.ndarray]]:
         """Backpropagation for a batch input.
@@ -110,7 +113,6 @@ class Network:
             fs_derivs.append(np.multiply(gs_derivs[-1], activation_prime))
             gs_derivs.append(fs_derivs[-1] @ w)
             i -= 1
-
 
         nabla_w = []
         for i in range(len(fs_derivs)):

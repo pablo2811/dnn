@@ -1,1 +1,2 @@
-data/mnist.npz
+data/*
+.DS_Store
